@@ -6,13 +6,40 @@
 pthread_t backgroundProcesses[NUM_THREADS];
 
 int main (int argc, char *argv[]) {
-    printf("Initalizing background threads...\n");
-    
+    //parse arguments
+    if (argc!=2) {
+        printf("Error: Usage: %s [PORT NUMBER] [OPTIONS]\n", argv[0]);
+        return 0;
+    }
 
     passon *tobepassed=malloc(sizeof *tobepassed);
+    
+    int graphical=0;
+    tobepassed->port=0;
+    for (int i=0; i<argc; i++) {
+        switch (argv[i][1]) {
+            case 'g':
+                if (i==1) {
+                    printf("Error: Usage: %s [PORT NUMBER] [OPTIONS]\n", argv[0]);
+                    return 0;
+                }
+                graphical=1;
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    if (atoi(argv[1]) > 65535 || atoi(argv[1]) < 1) {
+        printf("Error: Port number must be in this range: [1, 65535]\n");
+    }
+
+    printf("Initalizing background threads...\n");
 
     tobepassed->argc=argc;
-    tobepassed->argv=*argv;
+    tobepassed->exename=argv[0];
+    tobepassed->port=argv[1];
 
     printf("creating networking thread...\n");
     pthread_create(&backgroundProcesses[0], NULL, networking, tobepassed);
@@ -20,18 +47,6 @@ int main (int argc, char *argv[]) {
     pthread_create(&backgroundProcesses[1], NULL, background, tobepassed);
 
     printf("done.\n");
-
-    //parse arguments
-    int graphical;
-    for (int i=0; i<argc; i++) {
-        switch (argv[i][1]) {
-            case 'g':
-                graphical=1;
-                break;
-            default:
-                break;
-        }
-    }
 
     if (graphical) {
         gtk_init(&argc, &argv);
